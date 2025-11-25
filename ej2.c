@@ -25,8 +25,6 @@ int main(int argc, char **argv)
     close(t4[0]);
     close(t3[1]);
     close(t3[0]);
-    close(t2[1]);
-    close(t2[0]);
 
     close(0); // Redireciona entrada estandar a t2[0]
     dup(t2[0]);
