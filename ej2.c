@@ -21,14 +21,14 @@ if (fork()!=0)
   close(t3[1]); close(t3[0]);
   close(t2[1]); close(t2[0]);
 
-  close(0);   
+  close(0);            //Redireciona entrada estandar a t2[0]
   dup(t2[0]);
   close(t2[0]);
   close(t2[1]);
   
-  wait(NULL);
+ 
 
-  close(1);   
+  close(1);                   //Redireciona salida estandar a argv[2]
   open(argv[2],O_WRONLY|O_CREAT|O_APPEND,0777);
 
   
@@ -45,12 +45,13 @@ if (fork()!=0)
      close(t1[1]); close(t1[0]);
 
      close(0);   
-     dup(t3[0]);
+     dup(t3[0]);       //Redireciona entra estandar a t3[0]
      close(t3[0]);
      close(t3[1]);
 
-     close(1);   
-     open(argv[2],O_WRONLY|O_CREAT|O_TRUNC,0777); //revisar 0777
+     wait(NULL);
+     close(1);               //Redireciona salida estandar a argv[2]
+     open(argv[2],O_WRONLY|O_CREAT|O_TRUNC,0777); 
 
      write(1,"Heap output:\n",20); 
      execlp("head","head","-1",NULL);
@@ -64,11 +65,11 @@ if (fork()!=0)
        
        close(0);
        dup(t1[0]);
-       close(t1[0]);
+       close(t1[0]);           //Redireciona entra estandar a t1[0]
        close(t1[1]);
        
-       close(1);
-       dup(t3[1]);
+       close(1);           
+       dup(t3[1]);                 //Redireciona salida estandar a t3[1]
        close(t3[0]);
        close(t3[1]);
        
@@ -84,15 +85,15 @@ if (fork()!=0)
          close(t2[0]); 
          close(t1[0]);
         
-         while (read(t4[0],&dato,sizeof(dato))>0){
-            write(t1[1], &dato,sizeof(dato));
-            write(t2[1], &dato,sizeof(dato));
+         while (read(t4[0],&dato,sizeof(dato))>0){                   //lee de t4[0]
+            write(t1[1], &dato,sizeof(dato));                        //escribe en t1[1]
+            write(t2[1], &dato,sizeof(dato));                          //escribe en t2[1]
         }
   
          close(t4[0]);
          close(t1[1]);
          close(t2[1]);
-         wait(NULL);
+         
          
 
      } else {            /* Hijo ejecuta ls -l */
@@ -101,11 +102,11 @@ if (fork()!=0)
          close(t3[1]); close(t3[0]);
 
          close(1);   
-         dup(t4[1]);
+         dup(t4[1]);               //Redireciona salida estandar a t4[1]
          close(t4[1]);
          close(t4[0]);
 
-         close(2);
+         close(2);                       //Redireciona error estandar a argv[1]
          open(argv[1],O_WRONLY|O_CREAT|O_TRUNC,0777); 
 
          execlp("ls","ls","-l",NULL);
