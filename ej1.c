@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     }
 
     int fd_in = open(argv[1], O_RDONLY);
-    int fd_out = open(argv[2], O_CREAT | O_WRONLY | O_TRUNC, 0644); /// crea si el fichero no existe y si existe lo abre para escritura y elimina su contenido
+    int fd_out = open(argv[2], O_CREAT | O_WRONLY | O_TRUNC, 0777); // crea si el fichero no existe y si existe lo abre para escritura y elimina su contenido
     if (fd_in < 0 || fd_out < 0)
     {
         perror("open");
@@ -26,11 +26,10 @@ int main(int argc, char *argv[])
     }
 
     int t1[2], t2[2], t3[2];
-    if (pipe(t1) < 0 || pipe(t2) < 0 || pipe(t3) < 0)
-    {
-        perror("pipe");
-        exit(1);
-    }
+
+    pipe(t1);
+    pipe(t2);
+    pipe(t3);
 
     if (fork() == 0)
     {
@@ -50,10 +49,10 @@ int main(int argc, char *argv[])
             int i = 0;
             char c;
             int r;
-            while ((r = read(fd_in, &c, 1)) > 0)
+            while ((r = read(fd_in, &c, 1)) > 0) // mientras haya datos
             {
                 buffer[i++] = c;
-                if (c == '\n' || i == BUF_SIZE - 1)
+                if (c == '\n' || i == BUF_SIZE - 1) // lee hasta salto de linea o buffer lleno
                     break;
             }
 
@@ -75,7 +74,6 @@ int main(int argc, char *argv[])
         exit(0);
     }
 
-    // P2
     if (fork() == 0)
     {
         close(t2[1]);
@@ -94,10 +92,10 @@ int main(int argc, char *argv[])
             int i = 0;
             char c;
             int r;
-            while ((r = read(fd_in, &c, 1)) > 0)
+            while ((r = read(fd_in, &c, 1)) > 0) // mientras haya datos
             {
                 buffer[i++] = c;
-                if (c == '\n' || i == BUF_SIZE - 1)
+                if (c == '\n' || i == BUF_SIZE - 1) // lee hasta salto de linea o buffer lleno
                     break;
             }
             if (i > 0)
@@ -137,10 +135,10 @@ int main(int argc, char *argv[])
             int i = 0;
             char c;
             int r;
-            while ((r = read(fd_in, &c, 1)) > 0)
+            while ((r = read(fd_in, &c, 1)) > 0) // mientras haya datos
             {
                 buffer[i++] = c;
-                if (c == '\n' || i == BUF_SIZE - 1)
+                if (c == '\n' || i == BUF_SIZE - 1) // lee hasta salto de linea o buffer lleno
                     break;
             }
             if (i > 0)
@@ -161,30 +159,28 @@ int main(int argc, char *argv[])
         exit(0);
     }
 
-    // Padre
     close(t1[0]);
     close(t2[0]);
     close(t3[0]);
     close(t2[1]);
     close(t3[1]);
 
-    // iniciar token
     write(t1[1], "T", 1);
     close(t1[1]);
 
-    // esperar hijos
     for (int i = 0; i < 3; i++)
-        wait(NULL);
+        wait(NULL); // espera a que terminen los procesos hijos
 
-    // ejecutar diff
-    if (fork() == 0)
+    // ejecutar diff para comparar archivos
+    char cmd[256];
+    snprintf(cmd, sizeof(cmd), "diff %s %s", argv[1], argv[2]);
+
+    int ret = system(cmd);
+
+    if (ret == 256) // si son diferentes
     {
-        execlp("diff", "diff", argv[1], argv[2], NULL);
-        perror("exec diff");
-        exit(1);
+        printf("Los archivos son diferentes\n");
     }
-    else
-        wait(NULL);
 
     close(fd_in);
     close(fd_out);
