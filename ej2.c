@@ -9,7 +9,7 @@ int main(int argc, char **argv)
 {
   if (argc != 3)
   {
-    fprintf(stderr, "Introduce dos ficheros\n", argv[0]);
+    printf("Introduce dos ficheros\n");
     exit(-1);
   }
   int t1[2], t2[2], t3[2], t4[2];
