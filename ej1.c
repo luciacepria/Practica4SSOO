@@ -10,45 +10,6 @@
 #define NUM_PROCESOS 3
 #define BUF_SIZE 1024
 
-int leer_linea(int fd_in, int fd_out, int pid)
-{
-    char c;
-    char buffer[BUF_SIZE];
-    int i = 0;
-    int r;
-
-    while ((r = read(fd_in, &c, 1)) > 0)
-    {
-        buffer[i++] = c;
-        if (c == '\n' || i == BUF_SIZE - 1)
-            break;
-    }
-
-    if (r < 0)
-    {
-        perror("read fichero");
-        return -1;
-    }
-
-    if (i > 0)
-    {
-        int w = write(fd_out, buffer, i);
-        if (w != i)
-        {
-            perror("write fichero");
-            return -1;
-        }
-
-        buffer[i] = '\0';
-        printf("P%d: %s", pid, buffer);
-        fflush(stdout);
-
-        return 1;
-    }
-
-    return 0;
-}
-
 int main(int argc, char *argv[])
 {
     if (argc < 3)
@@ -67,119 +28,154 @@ int main(int argc, char *argv[])
 
     int pipe_fd[NUM_PROCESOS][2];
     for (int i = 0; i < NUM_PROCESOS; i++)
-    {
         if (pipe(pipe_fd[i]) < 0)
         {
             perror("pipe");
             exit(1);
         }
-    }
 
-    for (int i = 0; i < NUM_PROCESOS; i++)
+    if (fork() == 0)
     {
-        pid_t pid = fork();
-        if (pid < 0)
+        close(pipe_fd[0][1]);
+        close(pipe_fd[1][0]);
+        close(pipe_fd[2][0]);
+        close(pipe_fd[1][1]);
+        close(pipe_fd[2][1]);
+
+        while (1)
         {
-            perror("fork");
-            exit(1);
+            char token;
+            if (read(pipe_fd[0][0], &token, 1) <= 0)
+                break;
+            char buffer[BUF_SIZE];
+            int i = 0;
+            char c;
+            int r;
+            while ((r = read(fd_in, &c, 1)) > 0)
+            {
+                buffer[i++] = c;
+                if (c == '\n' || i == BUF_SIZE - 1)
+                    break;
+            }
+            if (i > 0)
+            {
+                write(fd_out, buffer, i);
+                buffer[i] = '\0';
+                printf("P1: %s", buffer);
+                fflush(stdout);
+                write(pipe_fd[1][1], "T", 1);
+            }
+            else
+                break;
         }
+        close(pipe_fd[0][0]);
+        close(pipe_fd[1][1]);
+        close(fd_in);
+        close(fd_out);
+        exit(0);
+    }
 
-        if (pid == 0)
+    if (fork() == 0)
+    {
+        close(pipe_fd[1][1]);
+        close(pipe_fd[0][0]);
+        close(pipe_fd[2][0]);
+        close(pipe_fd[0][1]);
+        close(pipe_fd[2][1]);
+
+        while (1)
         {
-            int pid_hijo = i + 1;
-
-            for (int j = 0; j < NUM_PROCESOS; j++)
+            char token;
+            if (read(pipe_fd[1][0], &token, 1) <= 0)
+                break;
+            char buffer[BUF_SIZE];
+            int i = 0;
+            char c;
+            int r;
+            while ((r = read(fd_in, &c, 1)) > 0)
             {
-                if (j == i)
-                {
-                    close(pipe_fd[j][1]);
-                }
-                else if (j == (i + 1) % NUM_PROCESOS)
-                {
-                    close(pipe_fd[j][0]);
-                }
-                else
-                {
-                    close(pipe_fd[j][0]);
-                    close(pipe_fd[j][1]);
-                }
+                buffer[i++] = c;
+                if (c == '\n' || i == BUF_SIZE - 1)
+                    break;
             }
-
-            int read_fd = pipe_fd[i][0];
-            int write_fd = pipe_fd[(i + 1) % NUM_PROCESOS][1];
-
-            while (1)
+            if (i > 0)
             {
-                char token;
-                int r_token = read(read_fd, &token, 1);
-                if (r_token < 0)
-                {
-                    perror("read token");
-                    exit(1);
-                }
-                if (r_token == 0)
-                    break;
-
-                int result = leer_linea(fd_in, fd_out, pid_hijo);
-                if (result < 0)
-                    exit(1);
-
-                if (result > 0)
-                {
-                    if (write(write_fd, "T", 1) != 1)
-                    {
-                        perror("write token");
-                        exit(1);
-                    }
-                }
-
-                if (result == 0)
-                {
-                    close(write_fd);
-                    break;
-                }
+                write(fd_out, buffer, i);
+                buffer[i] = '\0';
+                printf("P2: %s", buffer);
+                fflush(stdout);
+                write(pipe_fd[2][1], "T", 1);
             }
-
-            close(read_fd);
-            close(fd_in);
-            close(fd_out);
-            exit(0);
+            else
+                break;
         }
+        close(pipe_fd[1][0]);
+        close(pipe_fd[2][1]);
+        close(fd_in);
+        close(fd_out);
+        exit(0);
     }
 
-    for (int i = 0; i < NUM_PROCESOS; i++)
+    if (fork() == 0)
     {
-        close(pipe_fd[i][0]);
-        if (i != 0)
-            close(pipe_fd[i][1]);
+        close(pipe_fd[2][1]);
+        close(pipe_fd[0][0]);
+        close(pipe_fd[1][0]);
+        close(pipe_fd[0][1]);
+        close(pipe_fd[1][1]);
+
+        while (1)
+        {
+            char token;
+            if (read(pipe_fd[2][0], &token, 1) <= 0)
+                break;
+            char buffer[BUF_SIZE];
+            int i = 0;
+            char c;
+            int r;
+            while ((r = read(fd_in, &c, 1)) > 0)
+            {
+                buffer[i++] = c;
+                if (c == '\n' || i == BUF_SIZE - 1)
+                    break;
+            }
+            if (i > 0)
+            {
+                write(fd_out, buffer, i);
+                buffer[i] = '\0';
+                printf("P3: %s", buffer);
+                fflush(stdout);
+                write(pipe_fd[0][1], "T", 1);
+            }
+            else
+                break;
+        }
+        close(pipe_fd[2][0]);
+        close(pipe_fd[0][1]);
+        close(fd_in);
+        close(fd_out);
+        exit(0);
     }
 
-    if (write(pipe_fd[0][1], "T", 1) != 1)
-    {
-        perror("write token inicial");
-        exit(1);
-    }
+    close(pipe_fd[0][0]);
+    close(pipe_fd[1][0]);
+    close(pipe_fd[2][0]);
+    close(pipe_fd[1][1]);
+    close(pipe_fd[2][1]);
+    write(pipe_fd[0][1], "T", 1);
     close(pipe_fd[0][1]);
 
     for (int i = 0; i < NUM_PROCESOS; i++)
         wait(NULL);
 
-    pid_t pid_diff = fork();
-    if (pid_diff < 0)
-    {
-        perror("fork diff");
-        exit(1);
-    }
-    if (pid_diff == 0)
+    if (fork() == 0)
     {
         execlp("diff", "diff", argv[1], argv[2], NULL);
         perror("exec diff");
         exit(1);
     }
     else
-    {
         wait(NULL);
-    }
 
     close(fd_in);
     close(fd_out);
