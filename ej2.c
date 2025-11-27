@@ -109,7 +109,7 @@ int main(int argc, char **argv)
           close(t3[0]);
 
           close(1);
-          dup(t4[1]); // Redireciona salida estandar a t4[1]
+          dup(t4[1]); // D Redireciona salida estandar a t4[1]
           close(t4[1]);
           close(t4[0]);
 
