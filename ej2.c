@@ -19,8 +19,7 @@ int main(int argc, char **argv)
   pipe(t2);
   pipe(t3);
   pipe(t4);
-  if (fork() != 0)
-  { /* Tatarabuelo ejecuta grep ^d >> argv[2] */
+  if (fork() != 0){ /* Tatarabuelo ejecuta grep ^d >> argv[2] */
     close(t4[1]);
     close(t4[0]);
     close(t3[1]);
@@ -31,6 +30,7 @@ int main(int argc, char **argv)
     close(t2[0]);
     close(t2[1]);
 
+    wait(NULL);
     close(1); // Redireciona salida estandar a argv[2]
     open(argv[2], O_WRONLY | O_CREAT | O_APPEND, 0777);
 
@@ -38,11 +38,8 @@ int main(int argc, char **argv)
     execlp("grep", "grep", "^d", NULL);
     perror("Error en ejecucion de grep ^d");
     exit(-1);
-  }
-  else
-  {
-    if (fork() != 0) /* Bisabuelo ejecuta head -1 > argv[2] */
-    {
+  }else{
+    if (fork() != 0){/* Bisabuelo ejecuta head -1 > argv[2] */
       close(t4[1]);
       close(t4[0]);
       close(t2[1]);
@@ -55,7 +52,7 @@ int main(int argc, char **argv)
       close(t3[0]);
       close(t3[1]);
 
-      wait(NULL);
+      
       close(1); // Redireciona salida estandar a argv[2]
       open(argv[2], O_WRONLY | O_CREAT | O_TRUNC, 0777);
 
@@ -63,11 +60,9 @@ int main(int argc, char **argv)
       execlp("head", "head", "-1", NULL);
       perror("Error en ejecucion de head ");
       exit(-1);
-    }
-    else
-    {
-      if (fork() != 0) /* Abuelo ejecuta grep -v ^d */
-      {
+    }else{
+      if (fork() != 0) {/* Abuelo ejecuta grep -v ^d */
+      
         close(t4[0]);
         close(t4[1]);
         close(t2[0]);
@@ -80,22 +75,20 @@ int main(int argc, char **argv)
 
         close(1);
         dup(t3[1]); // Redireciona salida estandar a t3[1]
-        close(t3[0]);
         close(t3[1]);
+        close(t3[0]);
 
         execlp("grep", "grep", "-v", "^d", NULL);
         perror("Error en ejecucion de grep -v");
         exit(-1);
-      }
-      else
-      {
-        if (fork() != 0) /* Padre lee de ls y reparte a t1 y t2 */
-        {
+      }else{
+        if (fork() != 0){ /* Padre lee de ls y reparte a t1 y t2 */
+        
           close(t4[1]);
           close(t3[1]);
           close(t3[0]);
           close(t2[0]);
-          close(t1[0]);
+          
 
           while (read(t4[0], &dato, sizeof(dato)) > 0)
           {                                    // lee de t4[0]
@@ -105,10 +98,9 @@ int main(int argc, char **argv)
 
           close(t4[0]);
           close(t1[1]);
+          close(t1[0]);
           close(t2[1]);
-        }
-        else
-        { /* Hijo ejecuta ls -l */
+        }else{ /* Hijo ejecuta ls -l */
           close(t1[1]);
           close(t1[0]);
           close(t2[1]);
