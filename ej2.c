@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     
     close(1); // Redireciona salida estandar a argv[2]
     open(argv[2], O_WRONLY | O_CREAT | O_APPEND, 0777);
-
+    wait(NULL);
     write(1, "Grep output:\n", 20);
     execlp("grep", "grep", "^d", NULL);
     perror("Error en ejecucion de grep ^d");
@@ -99,8 +99,6 @@ int main(int argc, char **argv)
           close(t4[0]);
           close(t1[1]);
           close(t2[1]);
-          
-    
           
         }else{ /* Hijo ejecuta ls -l */
           close(t1[1]);
