@@ -100,6 +100,7 @@ int main(int argc, char **argv)
           close(t1[1]);
           close(t2[1]);
           close(t3[0]);
+          wait(NULL);
           
         }else{ /* Hijo ejecuta ls -l */
           close(t1[1]);
