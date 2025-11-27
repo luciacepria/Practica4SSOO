@@ -52,7 +52,7 @@ int main(int argc, char **argv)
       close(t3[0]);
       close(t3[1]);
 
-      wait(NULL);
+      
       close(1); // Redireciona salida estandar a argv[2]
       open(argv[2], O_WRONLY | O_CREAT | O_TRUNC, 0777);
 
