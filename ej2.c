@@ -86,7 +86,7 @@ int main(int argc, char **argv)
         
           close(t4[1]);
           close(t3[1]);
-          
+          close(t3[0]);
           close(t2[0]);
           close(t1[0]);
 
@@ -99,8 +99,8 @@ int main(int argc, char **argv)
           close(t4[0]);
           close(t1[1]);
           close(t2[1]);
-          close(t3[0]);
-          wait(NULL);
+          
+    
           
         }else{ /* Hijo ejecuta ls -l */
           close(t1[1]);
