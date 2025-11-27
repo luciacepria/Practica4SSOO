@@ -86,9 +86,9 @@ int main(int argc, char **argv)
         
           close(t4[1]);
           close(t3[1]);
-          close(t3[0]);
-          close(t2[0]);
           
+          close(t2[0]);
+          close(t1[0]);
 
           while (read(t4[0], &dato, sizeof(dato)) > 0)
           {                                    // lee de t4[0]
@@ -98,8 +98,9 @@ int main(int argc, char **argv)
 
           close(t4[0]);
           close(t1[1]);
-          close(t1[0]);
           close(t2[1]);
+          close(t3[0]);
+          
         }else{ /* Hijo ejecuta ls -l */
           close(t1[1]);
           close(t1[0]);
@@ -109,7 +110,7 @@ int main(int argc, char **argv)
           close(t3[0]);
 
           close(1);
-          dup(t4[1]); // D Redireciona salida estandar a t4[1]
+          dup(t4[1]); // Redireciona salida estandar a t4[1]
           close(t4[1]);
           close(t4[0]);
 
